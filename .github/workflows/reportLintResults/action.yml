@@ -1,0 +1,32 @@
+name: 'Report Lint Results'
+description: ''
+runs:
+  using: 'composite'
+  steps:
+    - name: Report
+      shell: bash
+      run: |
+        readonly files="$(find . -regex '^.*/reports/ktlint-results\.xml$' -type f)"
+        IFS=$'\n'
+        for file in $files ; do
+          srcroot="$(cat "$file" | jq -r '.runs[].originalUriBaseIds."%SRCROOT%".uri')"
+          srcroot="${srcroot#file://}"
+          results="$(cat "$file" | jq -c '.runs[].results | map({ level: .level, location: .locations[0].physicalLocation.artifactLocation.uri, col: .locations[0].physicalLocation.region.startColumn, line: .locations[0].physicalLocation.region.startLine, message: .message.text, ruleId: .ruleId })[]')"
+          for result in $results ; do
+            level="$(echo "$result" | jq -r '.level')"
+            case "$level" in
+              'error')
+                level='error';;
+              'warning')
+                level='warning';;
+              *) # note, none
+                level='notice'
+            esac
+            location="${srcroot}$(echo "$result" | jq -r '.location')"
+            col="$(echo "$result" | jq '.col')"
+            line="$(echo "$result" | jq '.line')"
+            message="$(echo "$result" | jq -r '.message')"
+            ruleId="$(echo "$result" | jq -r '.ruleId')"
+            echo "::$level file=$location,col=$col,line=$line,title=$ruleId::$message"
+          done
+        done
