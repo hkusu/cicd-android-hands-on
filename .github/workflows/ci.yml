@@ -14,3 +14,15 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
+      - run: ./gradlew assemble
+      - run: ./gradlew ktlintCheck
+      - uses: ./.github/workflows/reportLintResults
+      - run: ./gradlew test
+      - uses: actions/upload-artifact@v3
+        with:
+          path: '**/*.apk'
+      - uses: yumemi-inc/comment-pull-request@v1
+        if: cancelled() != true
+        with:
+          comment: 'CI passed.'
+          comment-if-failure: 'CI failed.'

@@ -24,7 +24,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    あああ
 }
 
 @Composable
