@@ -14,3 +14,4 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
+      - run: ./gradlew assemble # この行を追記
